@@ -1,9 +1,12 @@
 import datetime
 from typing import List
 
+import bson
+
 from data.bookings import Booking
 from data.cages import Cage
 from data.owners import Owner
+from data.snakes import Snake
 
 
 def create_account(name: str, email: str) -> Owner:
@@ -59,3 +62,25 @@ def add_available_date(selected_cage: Cage,
     cage.save()
 
     return cage
+
+
+def add_snake(active_account, name, length, species, is_venomous) -> Snake:
+    snake = Snake()
+    snake.name = name
+    snake.length = length
+    snake.species = species
+    snake.is_venomous = is_venomous
+    snake.save()
+
+    owner = find_account_by_email(active_account.email)
+    owner.snake_ids.append(snake.id)
+    owner.save()
+
+    return snake
+
+
+def get_snakes_for_user(user_id: bson.ObjectId) -> List[Snake]:
+    owner = Owner.objects(id=user_id).first()
+    snakes = Snake.objects(id__in=owner.snake_ids).all()
+
+    return list(snakes)
